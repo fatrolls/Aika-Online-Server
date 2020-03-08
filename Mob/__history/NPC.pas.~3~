@@ -1,0 +1,159 @@
+unit NPC;
+
+interface
+
+uses MiscData, PlayerData, BaseMob, SysUtils, DateUtils, Threading, Diagnostics,
+    Generics.Collections;
+
+// Definido por adicional na face
+type TNpcBehaviour = (Passive, SelfDefence, Aggressive, PlayerService);
+type TState = (Idle, Moving, Attacking);
+
+type PNpc =  ^TNpc;
+TNpc = record
+  public
+    base : TBaseMob;
+    Character : TCharacter;
+    // Crias e evocações vão ter isso definido como o Id do player
+    MobLeaderId: smallint;
+    GenerId  : WORD;
+    Behaviour: TNpcBehaviour;
+    LearnedSkills : TList<Byte>;
+    TimeKill: TDateTime;
+
+    procedure Create(npc: TCharacter; gId, clientId, leaderId: Integer);
+    procedure PerformAI;
+
+    function GenerData: TMOBGener;
+
+    class procedure ForEach(parallel: Boolean; proc : TProc<PNPC>); static;
+
+  private
+    _currentState: TState;
+    _previusState: TState;
+//    _target: PBaseMob;
+    _lastAction: TTime;
+    _idleTime: Single;
+    _currentSegment: TAISegment;
+
+
+    procedure SetState(state : TState);
+
+    procedure Revive;
+    procedure SearchForTarget;
+
+    function IdleState: Boolean;
+    function MovingState: Boolean;
+    function AttackingState: Boolean;
+
+    function ChooseAttack: Integer;
+end;
+
+
+
+implementation
+
+uses GlobalDefs, Windows, Functions, Log, Util;
+
+{ TNpc }
+procedure TNpc.Create(npc: TCharacter; gId, clientId, leaderId: Integer);
+var skill: TSkillData;
+begin
+
+end;
+
+function TNpc.GenerData: TMOBGener;
+begin
+  if MobGener.ContainsKey(GenerId) then
+    Result := MobGener[GenerId];
+end;
+
+
+procedure TNpc.PerformAI;
+var act: Boolean;
+begin
+
+end;
+
+function TNpc.IdleState: Boolean;
+begin
+  if (SecondsBetween(Now, _lastAction) >= _idleTime) then
+  begin
+    SetState(_previusState);
+    exit;
+  end
+end;
+
+function TNpc.MovingState: Boolean;
+var nextSegmentId : integer;
+begin
+
+end;
+
+function TNpc.AttackingState: Boolean;
+var dist: WORD;
+begin
+
+end;
+
+procedure TNpc.SearchForTarget;
+var curTarget: TBaseMob;
+  i: Integer;
+  targetId: Integer;
+begin
+
+end;
+
+procedure TNpc.Revive;
+var time: TDateTime;
+  minute: Int8;
+begin
+
+end;
+
+
+procedure TNpc.SetState(state: TState);
+begin
+  _previusState := _currentState;
+  _currentState := state;
+end;
+
+function TNpc.ChooseAttack: Integer;
+begin
+  Result := TFunctions.Rand(LearnedSkills.Count + 5);
+  Result := IfThen(Result > LearnedSkills.Count, -1, Result);
+end;
+
+
+
+class procedure TNpc.ForEach(parallel: Boolean; proc: TProc<PNPC>);
+var i: Integer;
+  npc: PNPC;
+begin
+  try
+    if(parallel) then
+    begin
+      TParallel.For(1001, InstantiatedNpcs - 1, procedure(i : Integer)
+      begin
+        npc := @NPCs[i];
+        if(npc = nil) OR not(npc.base.IsActive) then
+          exit;
+        proc(npc);
+      end);
+    end
+    else
+    begin
+      for i := 1001 to InstantiatedNpcs - 1 do
+      begin
+        npc := @NPCs[i];
+        if(npc = nil) OR not(npc.base.IsActive) then
+          continue;
+        proc(npc);
+      end;
+    end;
+  except on e : Exception do
+    Logger.Write(e.Message, TLogType.Warnings);
+  end;
+end;
+
+end.

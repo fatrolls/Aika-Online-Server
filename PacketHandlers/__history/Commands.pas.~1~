@@ -1,0 +1,149 @@
+unit Commands;
+
+interface
+
+  Uses MiscData, Player, BaseMob,
+   Windows, Messages, SysUtils, Variants, Classes, DateUtils,
+   Packets, StdCtrls, MMSystem,
+   ItemFunctions;
+
+  type
+    TCommands = class(TObject)
+    public
+      class function Received(var player : TPlayer; var buffer: array of BYTE) : Boolean;
+
+    private
+      class procedure Dir(var player : TPlayer; command : TCommandPacket); static;
+      class procedure Item(var player : TPlayer; packet : TCommandPacket); static;
+      class procedure Tab(var player : TPlayer; command : TCommandPacket); static;
+      class procedure Teleport(var player : TPlayer; command : TCommandPacket); static;
+      class procedure UpdateArea(var player : TPlayer; command : TCommandPacket); static;
+  end;
+
+implementation
+
+uses GlobalDefs, Functions;
+
+class procedure TCommands.Dir(var player : TPlayer; command: TCommandPacket);
+{var year, month, day : Word;
+    str : string;}
+begin
+  player.Base.Character.CurrentScore.Direction := StrToInt(command.Value);
+  player.Base.Character.BaseScore.Direction := StrToInt(command.Value);
+  player.Base.SendCreateMob(1);
+end;
+
+class function TCommands.Received(var player : TPlayer; var buffer: array of BYTE) : Boolean;
+var packet : TCommandPacket absolute buffer;
+begin
+  Result := true;
+  if(AnsiCompareText(packet.Command, 'dir') = 0) then
+    Dir(player, packet)
+  else if(AnsiCompareText(packet.Command, 'item') = 0) then
+    Item(player, packet)
+  else if(AnsiCompareText(packet.Command, 'tab') = 0) then
+    Tab(player, packet)
+  else if(AnsiCompareText(packet.Command, 'update') = 0) then
+    UpdateArea(player, packet)
+  else if(AnsiCompareText(packet.Command, 'create') = 0) then
+  begin
+    //GuildFunction.CreateGuild(player, packet.Value);
+    //não implementado guilds
+  end
+  else if(AnsiCompareText(packet.Command, 'expulsar') = 0) then
+  begin
+    //não implementado guilds
+  end
+  else if(AnsiCompareText(packet.Command, 'Fim da Aliança') = 0) then
+  begin
+    //não implementado guilds
+  end
+  else if(AnsiCompareText(packet.Command, 'goto') = 0) then begin
+    //
+  end
+  else if(AnsiCompareText(packet.Command, 'gold') = 0) then begin
+    if(strtoint(packet.Value) > 2000000000)then
+      player.Character.Base.Gold := 2000000000
+    else
+      player.Character.Base.Gold := strtoint(packet.Value);
+    player.RefreshMoney;
+  end
+  else if(AnsiCompareText(packet.Command, 'LearnPoints') = 0) then
+  begin
+    player.Character.Base.pMaster := strtoint(packet.Value);
+    player.SendEtc;
+  end
+  else if(AnsiCompareText(packet.Command, 'StatPoints') = 0) then
+  begin
+    player.Character.Base.pStatus := strtoint(packet.Value);
+    player.SendEtc;
+  end
+  else if(AnsiCompareText(packet.Command, 'SkillPoints') = 0) then
+  begin
+    player.Character.Base.pSkill := strtoint(packet.Value);
+    player.SendEtc;
+  end
+  else if(AnsiCompareText(packet.Command, 'SetLevel') = 0) then
+  begin
+    player.Character.Base.BaseScore.Level := strtoint(packet.Value);
+    player.Base.SendScore;
+  end
+  else if(AnsiCompareText(packet.Command, 'Teleport') = 0) then
+  begin
+    Teleport(player, packet);
+  end;
+end;
+
+class procedure TCommands.Tab(var player: TPlayer; command: TCommandPacket);
+var packet : TSendCreateMobPacket;
+begin
+  player.Base.SendCreateMob(SPAWN_NORMAL);
+end;
+
+class procedure TCommands.Teleport(var player: TPlayer; command: TCommandPacket);
+var Strings : TStringList; line: string; pos: TPosition;
+begin
+  line := command.Value;
+  Strings := TStringList.Create;
+  ExtractStrings([' '], [#0], pChar(line), Strings);
+
+  pos := TPosition.Create(StrToInt(Strings[0]), StrToInt(Strings[1]));
+  if not(TFunctions.GetEmptyMobGrid(player.Base.ClientId, pos)) then
+  begin
+
+  end;
+  player.Base.Teleport(pos);
+end;
+
+class procedure TCommands.UpdateArea(var player: TPlayer;
+  command: TCommandPacket);
+begin
+  player.Base.ForEachVisible(procedure(mob: TBaseMob)
+  begin
+    mob.SendCreateMob(SPAWN_NORMAL, 1);
+  end);
+end;
+
+class procedure TCommands.Item(var player : TPlayer; packet: TCommandPacket);
+var i: WORD; Strings : TStringList; line: string; item: TItem;
+begin
+  line := packet.Value;
+  Strings := TStringList.Create;
+  ExtractStrings([' '], [#0], pChar(line), Strings);
+  for i := Strings.Count - 1 to 6 do
+    Strings.Add(' ');
+  if Strings.Strings[0] = ' ' then
+    exit;
+
+  item.Index            := strtoint(Strings.Strings[0]);
+  item.Effects[0].Index := strtointdef(Strings.Strings[1], 0);
+  item.Effects[1].Index := strtointdef(Strings.Strings[3], 0);
+  item.Effects[2].Index := strtointdef(Strings.Strings[5], 0);
+  item.Effects[0].Value := strtointdef(Strings.Strings[2], 0);
+  item.Effects[1].Value := strtointdef(Strings.Strings[4], 0);
+  item.Effects[2].Value := strtointdef(Strings.Strings[6], 0);
+
+  TItemFunctions.PutItem(player, item);
+end;
+
+end.

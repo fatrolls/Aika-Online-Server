@@ -1,0 +1,99 @@
+unit Volatiles;
+
+interface
+
+uses Windows, Packets, Player, MiscData, ItemFunctions, Functions;
+
+type TVolatiles = class(TObject)
+  public
+    class function UseItem(var player: TPlayer; var buffer: array of Byte): Boolean; static;
+
+  private
+    class function ReturnScroll(var player : TPlayer) : Boolean; static;
+    class function Potion(var player : TPlayer; potionType : Byte): Boolean; static;
+end;
+
+implementation
+
+class function TVolatiles.UseItem(var player: TPlayer; var buffer: array of Byte): Boolean;
+var packet : TUseItemPacket absolute buffer;
+    srcItem, dstItem : TItem;
+    ammount, volatile : Byte;
+    used : Boolean;
+begin
+  Result := true;
+
+  if(packet.Position.X <> player.Character.Base.Last.X) or
+    (packet.Position.Y <> player.Character.Base.Last.Y) then
+    exit;
+
+  if not(TItemFunctions.GetItem(srcItem, player.Base, packet.SrcSlot, packet.SrcType)) then
+    exit;
+
+  TItemFunctions.GetItem(dstItem, player.Base, packet.DstSlot, packet.DstType);
+
+  ammount := TItemFunctions.GetItemAmount(srcItem);
+  if(ammount < 1) then
+    exit;
+
+  volatile := TItemFunctions.GetEffectValue(srcItem.Index, EF_VOLATILE);
+
+  case volatile of
+    {
+    01: //Poçao HP
+    begin
+      used := Potion(player, 1);
+    end;
+    }
+    11: //Pergaminho de Retorno
+    begin
+      used := ReturnScroll(player);
+    end;
+    else
+    begin
+      player.SendClientMessage('Item ainda não implementado.');
+      used := false;
+    end;
+  end;
+
+  if not(used) then
+  begin
+    exit;
+  end;
+
+  if(ammount > 1)then
+    TItemFunctions.SetItemAmount(srcItem, ammount - 1)
+  else
+    ZeroMemory(@srcItem, sizeof(TItem));
+
+  player.SendCreateItem(packet.SrcType, packet.SrcSlot, srcItem);
+end;
+
+
+class function TVolatiles.ReturnScroll(var player: TPlayer): Boolean;
+var position : TPosition;
+begin
+  result:= true;
+  position := TFunctions.GetStartXY(player.Character.CurrentCity);
+
+  player.Base.Teleport(position);
+  player.Base.SendEmotion(14, 3);
+end;
+
+class function TVolatiles.Potion(var player : TPlayer; potionType : Byte): Boolean;
+begin
+  result:= true;
+  case potionType of
+    1: // HP
+    begin
+      //Inc(player.Base.Character.bStatus, 100);
+      //if(
+    end; 
+    2:  // MP
+    begin
+    end;
+  end;
+end;
+
+
+end.                            

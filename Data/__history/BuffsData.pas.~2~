@@ -1,0 +1,74 @@
+unit BuffsData;
+
+interface
+uses PlayerData, System.Generics.Collections;
+
+procedure GetAffectScore(Character: PCharacter);
+procedure AddBMBuff(Character: PCharacter; affect: TAffect);
+
+implementation
+
+uses Windows, GlobalDefs, Util, ItemFunctions;
+
+procedure AddBMBuff(Character: PCharacter; affect: TAffect);
+var att, latk, ldef, skillID: Integer;
+  def: Integer;
+begin
+
+end;
+
+procedure GetAffectScore(Character: PCharacter);
+var x, i: Byte;
+  value: Byte;
+  affect: TAffect;
+  aux, aux2: Integer;
+  passive: Integer;
+begin
+
+end;
+
+{
+1.	Lentidão
+2.	Velocidade(+)
+3.	Resistência(-)
+4.	Ataque_Bônus
+5.	Evasão(-)
+6.	Evasão(+)
+7.	Velocidade(-)
+8.	Jóia(s)
+9.	Dano(+)
+10.	Ataque(-)
+11.	Escudo_Mágico
+12.	Defesa(-)
+13.	Assalto
+14.	Possuído
+15.	Técnica(+)
+16.	Transformação
+17.	Aura_da_Vida
+18.	Controle_de_Mana
+19.	Imunidade
+20.	Veneno
+21.	Meditação
+22.	Trovão
+23.	Aura_Bestial
+24.	Samaritano
+25.	Proteção_Elemental
+26.	Evasão(+)
+27.	Congelamento
+28.	Invisibilidade
+29.	Limite_da_Alma
+30.	Bônus_PvM
+31.	Escudo_Dourado
+32.	Cancelamento
+33.	Transformação
+34.	Comida
+35.	Bônus_HP/MP
+36.	Veneno
+37.	Ligação_Espectral
+38.	Troca_de_Espírito
+39.	Bônus_EXP
+}
+
+end.
+
+
